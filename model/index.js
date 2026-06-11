@@ -63,11 +63,7 @@ const Order = mongoose.model('Order', orderSchema);
 const gallerySchema = new mongoose.Schema({
   title:    { type: String, default: '' },
   imageUrl: { type: String, required: true },
-  category: {
-    type: String,
-    enum: ['Wedding', 'Portrait', 'Events', 'Commercial'],
-    required: true,
-  },
+  category: { type: String, required: true },
   featured: { type: Boolean, default: false },
 }, { timestamps: true });
 
@@ -75,10 +71,12 @@ const Gallery = mongoose.model('Gallery', gallerySchema);
 
 // ── Frame ─────────────────────────────────────────────────────
 const frameSchema = new mongoose.Schema({
-  size:      { type: String, required: true },
-  material:  { type: String, required: true },
-  price:     { type: Number, required: true },
-  available: { type: Boolean, default: true },
+  size:         { type: String, required: true },
+  material:     { type: String, required: true },
+  price:        { type: Number, required: true },
+  available:    { type: Boolean, default: true },
+  offerPercent: { type: Number, default: 0 },
+  offerLabel:   { type: String, default: '' },
 }, { timestamps: true });
 
 const Frame = mongoose.model('Frame', frameSchema);
