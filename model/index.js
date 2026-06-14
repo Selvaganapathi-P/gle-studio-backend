@@ -77,6 +77,7 @@ const frameSchema = new mongoose.Schema({
   available:    { type: Boolean, default: true },
   offerPercent: { type: Number, default: 0 },
   offerLabel:   { type: String, default: '' },
+  imageUrl:     { type: String, default: '' },
 }, { timestamps: true });
 
 const Frame = mongoose.model('Frame', frameSchema);

@@ -8,7 +8,9 @@ const ensureDir = (dir) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const folder = file.fieldname === 'gallery' ? 'gallery' : 'orders';
+    let folder = 'orders';
+    if (file.fieldname === 'gallery') folder = 'gallery';
+    else if (file.fieldname === 'frame') folder = 'frames';
     const dir = path.join(__dirname, '../uploads', folder);
     ensureDir(dir);
     cb(null, dir);

@@ -51,20 +51,45 @@ const getFrames = async (req, res) => {
 
 const createFrame = async (req, res) => {
   try {
-    const frame = await Frame.create(req.body);
+    const data = { ...req.body };
+    data.price = Number(data.price);
+    data.offerPercent = data.offerPercent ? Number(data.offerPercent) : 0;
+    if (req.file) data.imageUrl = `${BASE_URL}/uploads/frames/${req.file.filename}`;
+    const frame = await Frame.create(data);
     res.status(201).json(frame);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 const updateFrame = async (req, res) => {
   try {
-    const frame = await Frame.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const data = { ...req.body };
+    if (data.price !== undefined) data.price = Number(data.price);
+    if (data.offerPercent !== undefined) data.offerPercent = Number(data.offerPercent) || 0;
+
+    if (req.file) {
+      // New image uploaded — remove the old one (if any)
+      const existing = await Frame.findById(req.params.id);
+      if (existing?.imageUrl) {
+        const relativePath = existing.imageUrl.replace(BASE_URL, '');
+        const oldPath = path.join(__dirname, '..', relativePath);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      data.imageUrl = `${BASE_URL}/uploads/frames/${req.file.filename}`;
+    }
+
+    const frame = await Frame.findByIdAndUpdate(req.params.id, data, { new: true });
     res.json(frame);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 const deleteFrame = async (req, res) => {
   try {
+    const frame = await Frame.findById(req.params.id);
+    if (frame?.imageUrl) {
+      const relativePath = frame.imageUrl.replace(BASE_URL, '');
+      const filePath = path.join(__dirname, '..', relativePath);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
     await Frame.findByIdAndDelete(req.params.id);
     res.json({ message: 'Frame deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
