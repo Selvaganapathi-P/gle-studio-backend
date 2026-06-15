@@ -6,12 +6,17 @@ const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 
-const storage = multer.diskStorage({
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) cb(null, true);
+  else cb(new Error('Only image files are allowed'), false);
+};
+
+// ── Disk storage (unchanged) ──────────────────────────────────
+// Still used for order "reference image" uploads (admin-only viewing,
+// not shown publicly, so persistence across redeploys is less critical).
+const diskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let folder = 'orders';
-    if (file.fieldname === 'gallery') folder = 'gallery';
-    else if (file.fieldname === 'frame') folder = 'frames';
-    const dir = path.join(__dirname, '../uploads', folder);
+    const dir = path.join(__dirname, '../uploads/orders');
     ensureDir(dir);
     cb(null, dir);
   },
@@ -21,15 +26,13 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) cb(null, true);
-  else cb(new Error('Only image files are allowed'), false);
-};
+// ── Memory storage (new) ──────────────────────────────────────
+// Used for Gallery and Frame images — the buffer is uploaded straight to
+// Supabase Storage in the controller, giving a permanent public URL.
+const memoryStorage = multer.memoryStorage();
 
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
-});
+const upload = multer({ storage: diskStorage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadMemory = multer({ storage: memoryStorage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 module.exports = upload;
+module.exports.memory = uploadMemory;

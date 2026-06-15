@@ -61,10 +61,11 @@ const Order = mongoose.model('Order', orderSchema);
 
 // ── Gallery ───────────────────────────────────────────────────
 const gallerySchema = new mongoose.Schema({
-  title:    { type: String, default: '' },
-  imageUrl: { type: String, required: true },
-  category: { type: String, required: true },
-  featured: { type: Boolean, default: false },
+  title:     { type: String, default: '' },
+  imageUrl:  { type: String, required: true },  // Supabase public URL
+  imagePath: { type: String, default: '' },      // Supabase storage path (for deletion)
+  category:  { type: String, required: true },
+  featured:  { type: Boolean, default: false },
 }, { timestamps: true });
 
 const Gallery = mongoose.model('Gallery', gallerySchema);
@@ -77,7 +78,8 @@ const frameSchema = new mongoose.Schema({
   available:    { type: Boolean, default: true },
   offerPercent: { type: Number, default: 0 },
   offerLabel:   { type: String, default: '' },
-  imageUrl:     { type: String, default: '' },
+  imageUrl:     { type: String, default: '' },  // Supabase public URL
+  imagePath:    { type: String, default: '' },  // Supabase storage path (for deletion)
 }, { timestamps: true });
 
 const Frame = mongoose.model('Frame', frameSchema);
@@ -118,6 +120,7 @@ const settingsSchema = new mongoose.Schema({
   email:          { type: String, default: 'tirupattur.gle2024@gmail.com' },
   address:        { type: String, default: 'Tirupattur, Tamil Nadu' },
   logo:           { type: String, default: '' },
+  logoPath:       { type: String, default: '' },
   instagramUrl:   { type: String, default: '' },
   facebookUrl:    { type: String, default: '' },
 }, { timestamps: true });

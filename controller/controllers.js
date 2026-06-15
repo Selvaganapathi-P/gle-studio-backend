@@ -1,9 +1,5 @@
 const { Gallery, Frame, Staff, Settings, User, Order } = require('../model');
-const fs = require('fs');
-const path = require('path');
-
-// Base URL of this backend (set in .env / Render env vars), e.g. https://gle-studio-backend.onrender.com
-const BASE_URL = process.env.BACKEND_URL || '';
+const { uploadToSupabase, deleteFromSupabase } = require('../utils/supabaseUpload');
 
 // ======= GALLERY =======
 const getGallery = async (req, res) => {
@@ -18,9 +14,11 @@ const getGallery = async (req, res) => {
 const uploadPhoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+    const { url, path: filePath } = await uploadToSupabase(req.file, 'gallery');
     const photo = await Gallery.create({
       title: req.body.title || '',
-      imageUrl: `${BASE_URL}/uploads/gallery/${req.file.filename}`,
+      imageUrl: url,
+      imagePath: filePath,
       category: req.body.category,
       featured: req.body.featured === 'true',
     });
@@ -32,10 +30,7 @@ const deletePhoto = async (req, res) => {
   try {
     const photo = await Gallery.findById(req.params.id);
     if (!photo) return res.status(404).json({ message: 'Photo not found' });
-    // Delete file (strip BASE_URL prefix if present to get the local relative path)
-    const relativePath = photo.imageUrl.replace(BASE_URL, '');
-    const filePath = path.join(__dirname, '..', relativePath);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    await deleteFromSupabase(photo.imagePath);
     await photo.deleteOne();
     res.json({ message: 'Photo deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -54,7 +49,11 @@ const createFrame = async (req, res) => {
     const data = { ...req.body };
     data.price = Number(data.price);
     data.offerPercent = data.offerPercent ? Number(data.offerPercent) : 0;
-    if (req.file) data.imageUrl = `${BASE_URL}/uploads/frames/${req.file.filename}`;
+    if (req.file) {
+      const { url, path: filePath } = await uploadToSupabase(req.file, 'frames');
+      data.imageUrl = url;
+      data.imagePath = filePath;
+    }
     const frame = await Frame.create(data);
     res.status(201).json(frame);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -67,14 +66,12 @@ const updateFrame = async (req, res) => {
     if (data.offerPercent !== undefined) data.offerPercent = Number(data.offerPercent) || 0;
 
     if (req.file) {
-      // New image uploaded — remove the old one (if any)
+      // New image uploaded — remove the old one from Supabase (if any)
       const existing = await Frame.findById(req.params.id);
-      if (existing?.imageUrl) {
-        const relativePath = existing.imageUrl.replace(BASE_URL, '');
-        const oldPath = path.join(__dirname, '..', relativePath);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-      data.imageUrl = `${BASE_URL}/uploads/frames/${req.file.filename}`;
+      if (existing?.imagePath) await deleteFromSupabase(existing.imagePath);
+      const { url, path: filePath } = await uploadToSupabase(req.file, 'frames');
+      data.imageUrl = url;
+      data.imagePath = filePath;
     }
 
     const frame = await Frame.findByIdAndUpdate(req.params.id, data, { new: true });
@@ -85,11 +82,7 @@ const updateFrame = async (req, res) => {
 const deleteFrame = async (req, res) => {
   try {
     const frame = await Frame.findById(req.params.id);
-    if (frame?.imageUrl) {
-      const relativePath = frame.imageUrl.replace(BASE_URL, '');
-      const filePath = path.join(__dirname, '..', relativePath);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    }
+    if (frame?.imagePath) await deleteFromSupabase(frame.imagePath);
     await Frame.findByIdAndDelete(req.params.id);
     res.json({ message: 'Frame deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -142,7 +135,11 @@ const updateSettings = async (req, res) => {
     let settings = await Settings.findOne();
     if (!settings) settings = new Settings();
     Object.assign(settings, req.body);
-    if (req.file) settings.logo = `${BASE_URL}/uploads/gallery/${req.file.filename}`;
+    if (req.file) {
+      const { url, path: filePath } = await uploadToSupabase(req.file, 'settings');
+      settings.logo = url;
+      settings.logoPath = filePath;
+    }
     await settings.save();
     res.json(settings);
   } catch (err) { res.status(500).json({ message: err.message }); }
