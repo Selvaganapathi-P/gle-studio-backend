@@ -13,10 +13,20 @@ const app = express();
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL,
-    'http://localhost:3000',
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    const allowed = [
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'https://gle-studio.vercel.app',
+    ].filter(Boolean);
+    // Also allow any *.vercel.app preview deployment
+    if (allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 app.use(express.json());
