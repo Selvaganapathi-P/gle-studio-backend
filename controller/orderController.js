@@ -21,9 +21,14 @@ const createOrder = async (req, res) => {
       `🆔 Order ID: ${order._id}`
     );
 
-    // Always use ADMIN_WHATSAPP from .env as the primary number
-    const waNumber = process.env.ADMIN_WHATSAPP;
-    const waUrl    = `https://wa.me/${waNumber}?text=${msg}`;
+    // Prefer the DB-stored whatsappNumber (admin can change it in Settings);
+    // fall back to the env var if Settings has none set yet.
+    let waNumber = process.env.ADMIN_WHATSAPP;
+    try {
+      const settings = await Settings.findOne({});
+      if (settings?.whatsappNumber) waNumber = settings.whatsappNumber;
+    } catch { /* use env fallback */ }
+    const waUrl = `https://wa.me/${waNumber}?text=${msg}`;
 
     res.status(201).json({ order, waUrl });
   } catch (err) {
