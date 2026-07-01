@@ -49,6 +49,14 @@ app.use('/api/users',    require('./router/users'));
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'GLE Studio API running ✅' }));
 
+// Root — friendly message for browser visits
+app.get('/', (req, res) => res.json({
+  name: 'GLE Studio API',
+  status: 'running ✅',
+  version: '1.0.0',
+  endpoints: '/api/health · /api/orders · /api/gallery · /api/frames · /api/services · /api/auth',
+}));
+
 // Error handler — must be last
 app.use(errorHandler);
 
