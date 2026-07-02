@@ -86,15 +86,17 @@ const Frame = mongoose.model('Frame', frameSchema);
 
 // ── Service ───────────────────────────────────────────────────
 const serviceSchema = new mongoose.Schema({
-  icon:     { type: String, default: '📷' },
-  title:    { type: String, required: true },
-  price:    { type: Number, required: true },
-  maxPrice: { type: Number, default: 0 },
-  duration: { type: String, default: '' },
-  desc:     { type: String, default: '' },
-  features: [{ type: String }],
-  active:   { type: Boolean, default: true },
-  order:    { type: Number, default: 0 },
+  icon:      { type: String, default: '' },
+  imageUrl:  { type: String, default: '' },
+  imagePath: { type: String, default: '' },
+  title:     { type: String, required: true },
+  price:     { type: Number, required: true },
+  maxPrice:  { type: Number, default: 0 },
+  duration:  { type: String, default: '' },
+  desc:      { type: String, default: '' },
+  features:  [{ type: String }],
+  active:    { type: Boolean, default: true },
+  order:     { type: Number, default: 0 },
 }, { timestamps: true });
 
 const Service = mongoose.model('Service', serviceSchema);
