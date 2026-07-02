@@ -1,11 +1,15 @@
 const { Order, Settings } = require('../model');
+const { uploadToSupabase } = require('../utils/supabaseUpload');
 
 // ── POST /api/orders ──────────────────────────────────────────
 const createOrder = async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.user) data.user           = req.user._id;
-    if (req.file) data.referenceImage = `/uploads/orders/${req.file.filename}`;
+    if (req.user) data.user = req.user._id;
+    if (req.file) {
+      const { url } = await uploadToSupabase(req.file, 'orders');
+      data.referenceImage = url;
+    }
 
     const order = await Order.create(data);
 

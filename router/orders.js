@@ -35,6 +35,6 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-router.post('/', optionalAuth, upload.single('referenceImage'), createOrder);
+router.post('/', optionalAuth, upload.memory.single('referenceImage'), createOrder);
 
 module.exports = router;
